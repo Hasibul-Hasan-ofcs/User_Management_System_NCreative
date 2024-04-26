@@ -4,7 +4,9 @@
 
 ### To run locally:
 
-to install all the dependencies use command :
+- Please rename the `.env.example` file to `.env` and uncomment everything in the file.
+
+to install all the dependencies please use command :
 
 ```bash
 npm install
