@@ -17,7 +17,7 @@ const generateLoginToken = (id, role) => {
 const verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
     if (err) {
-      return res.status(401).json({ message: "Invalid token" });
+      return new Error("Invalid token");
     } else {
       return decodedToken;
     }

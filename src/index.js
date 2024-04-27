@@ -32,3 +32,5 @@ app.use(errorHandler);
 app.listen(port, () =>
   logger.info(`Server started, listening to port ${port}...`.cyan)
 );
+
+module.exports = { app };

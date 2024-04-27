@@ -17,3 +17,9 @@ to run the application please use command :
 ```bash
 npm start
 ```
+
+to run tests for the application using jest please use command :
+
+```bash
+npm test
+```
