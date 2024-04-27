@@ -12,7 +12,14 @@ const port = process.env.PORT || 3050;
 const app = express();
 const multer = require("multer");
 const Storage = require("../configurations/Multer");
+const { default: rateLimit } = require("express-rate-limit");
 const upload = multer({ storage: Storage });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100, // Limits to 100 requests per 15 minutes.
+});
+
+app.use(limiter);
 
 app.use(express.urlencoded({ extended: true }));
 
