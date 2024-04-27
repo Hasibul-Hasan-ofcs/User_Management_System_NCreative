@@ -1,15 +1,23 @@
 const UserModel = require("../models/UserModel");
 const { logger } = require("../utilities/Logger");
-const { generateToken } = require("../utilities/JWT");
+const {
+  generateToken,
+  generateLoginToken,
+  verifyToken,
+} = require("../utilities/JWT");
 
 const userSignUp = async (req, res, next) => {
   try {
-    const { name, email, password, phone_no, address, user_role } = req.body;
+    let { name, email, password, phone_no, address, user_role } = req.body;
     const image_name = req.file.filename;
 
-    if (!name || !email || !password || !phone_no || !address || !user_role) {
+    if (!name || !email || !password || !phone_no || !address) {
       res.status(400);
       throw new Error("Please provide data for all the required field.");
+    }
+
+    if (!user_role) {
+      user_role = "user";
     }
 
     const userExists = await UserModel.findOne({ email });
@@ -34,18 +42,16 @@ const userSignUp = async (req, res, next) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        password: user.password,
         phone_no: user.phone_no,
         address: user.address,
         user_role: user.user_role,
         image_name: user.image_name,
-        token: generateToken(user._id, user.role),
+        token: generateToken(user._id, user.user_role),
       });
     }
   } catch (error) {
     res.status(400);
     next(error);
-    // throw new Error(`Could not create new user`);
   }
 };
 
@@ -61,7 +67,7 @@ const userLogin = async (req, res, next) => {
         name: user.name,
         email: user.email,
         image_name: user.image_name,
-        token: generateToken(user._id, user.role),
+        token: generateLoginToken(user._id, user.user_role),
       });
     } else {
       res.status(401);
@@ -74,4 +80,137 @@ const userLogin = async (req, res, next) => {
   }
 };
 
-module.exports = { userSignUp, userLogin };
+const getAllUsers = async (req, res, next) => {
+  try {
+    const allUsers = await UserModel.find({ _id: { $ne: req.user._id } }); //all users except current user
+
+    if (allUsers) {
+      res.status(200).json(allUsers);
+    }
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const getAdmin = async (req, res, next) => {
+  try {
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+
+    const admin = await UserModel.findById(decoded.id);
+
+    if (admin) res.status(200).json(admin);
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const getUser = async (req, res, next) => {
+  try {
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+
+    const user = await UserModel.findById(decoded.id);
+
+    if (user) res.status(200).json(user);
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const updateUser = async (req, res, next) => {
+  try {
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+    const updateData = req.body;
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      decoded.id,
+      {
+        $set: updateData,
+      },
+      { new: true }
+    );
+
+    if (updatedUser) res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const updateAdmin = async (req, res, next) => {
+  try {
+    const { id, ...updateData } = req.body;
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+    const updId = id || decoded.id;
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      updId,
+      {
+        $set: updateData,
+      },
+      { new: true }
+    );
+
+    if (updatedUser) res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(400);
+    next(error);
+  }
+};
+
+const deleteUser = async (req, res, next) => {
+  try {
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+
+    const deletedUser = await UserModel.findByIdAndDelete(decoded.id);
+
+    if (deletedUser) res.status(200).send("User deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteAdmin = async (req, res, next) => {
+  try {
+    const token = req.token || req.headers.authorization;
+    const decoded = verifyToken(token);
+
+    const deletedUser = await UserModel.findByIdAndDelete(decoded.id);
+
+    if (deletedUser) res.status(200).send("User deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+
+    if (deletedUser) res.status(200).send("User deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  userSignUp,
+  userLogin,
+  getAllUsers,
+  getAdmin,
+  getUser,
+  updateUser,
+  updateAdmin,
+  deleteUser,
+  deleteAdmin,
+  deleteById,
+};
