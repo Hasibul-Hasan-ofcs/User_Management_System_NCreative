@@ -5,10 +5,17 @@ const {
   generateLoginToken,
   verifyToken,
 } = require("../utilities/JWT");
+const {
+  signupV,
+  loginV,
+  updateUserV,
+  updateAdminV,
+} = require("../middlewares/Validation");
 
 const userSignUp = async (req, res, next) => {
   try {
-    let { name, email, password, phone_no, address, user_role } = req.body;
+    let { name, email, password, phone_no, address, user_role } =
+      await signupV.validateAsync(req.body);
     const image_name = req.file.filename;
 
     if (!name || !email || !password || !phone_no || !address) {
@@ -57,7 +64,7 @@ const userSignUp = async (req, res, next) => {
 
 const userLogin = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = await loginV.validateAsync(req.body);
 
     const user = await UserModel.findOne({ email });
 
@@ -125,7 +132,7 @@ const updateUser = async (req, res, next) => {
   try {
     const token = req.token || req.headers.authorization;
     const decoded = verifyToken(token);
-    const updateData = req.body;
+    const updateData = await updateUserV.validateAsync(req.body);
 
     const updatedUser = await UserModel.findByIdAndUpdate(
       decoded.id,
@@ -144,7 +151,7 @@ const updateUser = async (req, res, next) => {
 
 const updateAdmin = async (req, res, next) => {
   try {
-    const { id, ...updateData } = req.body;
+    const { id, ...updateData } = await updateAdminV.validateAsync(req.body);
     const token = req.token || req.headers.authorization;
     const decoded = verifyToken(token);
     const updId = id || decoded.id;

@@ -4,7 +4,7 @@
 
 ### To run locally:
 
-- Please rename the `.env.example` file to `.env` and uncomment everything in the file.
+- Please include a `.env` file in the root or rename the `.env.example` file to `.env` and include everything necessary in the file.
 
 to install all the dependencies please use command :
 
