@@ -11,6 +11,7 @@
   "author": "MD. Hasibul Hasan Rasel",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.10.4",
     "bcryptjs": "^2.4.3",
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",

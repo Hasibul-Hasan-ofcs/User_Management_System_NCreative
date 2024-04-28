@@ -11,6 +11,8 @@ const {
   updateUserV,
   updateAdminV,
 } = require("../middlewares/Validation");
+const setMessageByInitiator = require("../../message_service/initiator");
+const receiverMessageReceive = require("../../message_service/consumer");
 
 const userSignUp = async (req, res, next) => {
   try {
@@ -76,6 +78,9 @@ const userLogin = async (req, res, next) => {
         image_name: user.image_name,
         token: generateLoginToken(user._id, user.user_role),
       });
+
+      const userId = user._id;
+      receiverMessageReceive(userId); //message queue access
     } else {
       res.status(401);
       const error = new Error("Invalid email or password.");
@@ -164,7 +169,13 @@ const updateAdmin = async (req, res, next) => {
       { new: true }
     );
 
-    if (updatedUser) res.status(200).json(updatedUser);
+    if (updatedUser) {
+      res.status(200).json(updatedUser);
+      await setMessageByInitiator(
+        updId,
+        `User with id: ${updId} was updated at: ${new Date().toLocaleString()}`
+      ); //message queue initiation
+    }
   } catch (error) {
     res.status(400);
     next(error);
